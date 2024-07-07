@@ -24,8 +24,7 @@ prevHistoryM s HistLog {pastHistory = ls : past, futureHistory = future} =
 
 prevHistories :: [Grapheme] -> HistLog -> [([Grapheme], HistLog)]
 prevHistories s h = flip unfoldr (s, h) $ \(s', h') ->
-  fmap (\r -> (r, r)) $
-    prevHistoryM s' h'
+  (\r -> (r, r)) <$> prevHistoryM s' h'
 
 histLog :: History -> HistLog
 histLog hist =
@@ -50,10 +49,8 @@ runHistoryFromFile (Just file) stifleAmt f = do
   -- For example, if there's an unhandled ctrl-c, we don't want to lose
   -- the user's previously-entered commands.
   -- (Note that this requires using ReaderT (IORef History) instead of StateT.
-  x <-
-    runReaderT f historyRef
-      `finally` (liftIO $ readIORef historyRef >>= writeHistory file)
-  return x
+  runReaderT f historyRef
+    `finally` liftIO (readIORef historyRef >>= writeHistory file)
 
 prevHistory, firstHistory :: (Save s) => s -> HistLog -> (s, HistLog)
 prevHistory s h =
@@ -80,7 +77,7 @@ histUpdate ::
   (s -> HistLog -> (t, HistLog)) ->
   s ->
   m (Either Effect t)
-histUpdate f = liftM Right . update . f
+histUpdate f = fmap Right . update . f
 
 reverseHist :: (MonadState HistLog m) => m b -> m b
 reverseHist f = do
@@ -142,14 +139,14 @@ searchHistories ::
   [Grapheme] ->
   [([Grapheme], HistLog)] ->
   Maybe (SearchMode, HistLog)
-searchHistories dir text = foldr mplus Nothing . map findIt
+searchHistories dir text = foldr (mplus . findIt) Nothing
   where
     findIt (l, h) = do
       im <- findInLine text l
       return (SearchMode text im dir, h)
 
 findInLine :: [Grapheme] -> [Grapheme] -> Maybe InsertMode
-findInLine text l = find' [] l
+findInLine text = find' []
   where
     find' _ [] = Nothing
     find' prev ccs@(c : cs)

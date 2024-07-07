@@ -215,8 +215,7 @@ listFiles path = liftIO $ do
     if not dirExists
       then return []
       else
-        fmap (map completion . filterPrefix) $
-          getDirectoryContents fixedDir
+        map completion . filterPrefix <$> getDirectoryContents fixedDir
   -- The replacement text should include the directory part, and also
   -- have a trailing slash if it's itself a directory.
   forM allFiles $ \c -> do

@@ -10,6 +10,7 @@
 module Pty (runCommandInPty) where
 
 import Control.Concurrent
+import Control.Monad (when)
 import qualified Data.ByteString as B
 import Foreign.C.Error
 import Foreign.C.Types
@@ -54,9 +55,7 @@ putInput :: Fd -> B.ByteString -> IO ()
 putInput fd input =
   B.useAsCStringLen input $ \(cstr, len) -> do
     written <- fdWriteBuf fd (castPtr cstr) (fromIntegral len)
-    if written == 0
-      then threadDelay 1000 >> putInput fd input
-      else return ()
+    when (written == 0) $ threadDelay 1000 >> putInput fd input
 
 getOutput :: Fd -> IO B.ByteString
 getOutput fd = do

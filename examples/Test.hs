@@ -21,7 +21,7 @@ main :: IO ()
 main = do
   args <- getArgs
   let inputFunc = case args of
-        ["chars"] -> fmap (fmap (\c -> [c])) . getInputChar
+        ["chars"] -> fmap (fmap (: [])) . getInputChar
         ["password"] -> getPassword Nothing
         ["password", [c]] -> getPassword (Just c)
         ["initial"] -> flip getInputLineWithInitial ("left ", "right")

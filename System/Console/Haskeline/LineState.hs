@@ -137,7 +137,7 @@ stringToGraphemes = mkString . dropWhile isCombiningChar
         : mkString (dropWhile isCombiningChar cs)
 
 graphemesToString :: [Grapheme] -> String
-graphemesToString = concatMap (\g -> (baseChar g : combiningChars g))
+graphemesToString = concatMap (\g -> baseChar g : combiningChars g)
 
 -- | This class abstracts away the internal representations of the line state,
 -- for use by the drawing actions.  Line state is generally stored in a zipper format.
@@ -392,11 +392,11 @@ data Password = Password
 instance LineState Password where
   beforeCursor prefix p =
     prefix
-      ++ ( stringToGraphemes $
-             case passwordChar p of
-               Nothing -> []
-               Just c -> replicate (length $ passwordState p) c
-         )
+      ++ stringToGraphemes
+        ( case passwordChar p of
+            Nothing -> []
+            Just c -> replicate (length $ passwordState p) c
+        )
   afterCursor _ = []
 
 instance Result Password where

@@ -3,7 +3,7 @@ module System.Console.Haskeline.Term where
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Exception (AsyncException (..), Exception, SomeException (..), fromException)
-import Control.Monad (guard, liftM, when)
+import Control.Monad (guard, liftM, void, when)
 import Control.Monad.Catch
   ( MonadMask,
     bracket,
@@ -191,7 +191,7 @@ bracketSet getState set newState f =
 
 -- | Returns one 8-bit word.  Needs to be wrapped by hWithBinaryMode.
 hGetByte :: Handle -> MaybeT IO Word8
-hGetByte = guardedEOF $ liftM (toEnum . fromEnum) . hGetChar
+hGetByte = guardedEOF $ fmap (toEnum . fromEnum) . hGetChar
 
 guardedEOF :: (Handle -> IO a) -> Handle -> MaybeT IO a
 guardedEOF f h = do
@@ -215,7 +215,7 @@ hMaybeReadNewline h = returnOnEOF () $ do
   ready <- hReady h
   when ready $ do
     c <- hLookAhead h
-    when (c == '\n') $ getChar >> return ()
+    when (c == '\n') $ void getChar
 
 returnOnEOF :: (MonadMask m) => a -> m a -> m a
 returnOnEOF x = handle $ \e ->
@@ -231,5 +231,5 @@ hGetLocaleLine = guardedEOF $ \h -> do
   buff <- liftIO $ hGetBuffering h
   liftIO $
     if buff == NoBuffering
-      then fmap BC.pack $ System.IO.hGetLine h
+      then BC.pack <$> System.IO.hGetLine h
       else BC.hGetLine h

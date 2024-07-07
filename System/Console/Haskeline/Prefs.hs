@@ -129,7 +129,7 @@ lookupKeyBinding k = Map.findWithDefault [k] k . customBindings
 -- the 'defaultPrefs' will be returned.
 readPrefs :: FilePath -> IO Prefs
 readPrefs file = handle (\(_ :: IOException) -> return defaultPrefs) $ do
-  ls <- fmap lines $ readFile file
+  ls <- lines <$> readFile file
   return $! foldl' applyField defaultPrefs ls
   where
     applyField p l = case break (== ':') l of

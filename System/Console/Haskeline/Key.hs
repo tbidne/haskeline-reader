@@ -154,8 +154,8 @@ breakAtDashes str = case break (== '-') str of
 parseKey :: String -> Maybe Key
 parseKey str = fmap canonicalizeKey $
   case reverse (breakAtDashes str) of
-    [ks] -> liftM simpleKey (parseBaseKey ks)
-    ks : ms -> liftM (parseModifiers ms) (parseBaseKey ks)
+    [ks] -> fmap simpleKey (parseBaseKey ks)
+    ks : ms -> fmap (parseModifiers ms) (parseBaseKey ks)
     [] -> Nothing
 
 parseBaseKey :: String -> Maybe BaseKey

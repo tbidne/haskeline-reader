@@ -47,18 +47,17 @@ runDumbTerm :: Handles -> MaybeT IO RunTerm
 runDumbTerm h = liftIO $ posixRunTerm h (posixLayouts h) [] id evalDumb
 
 instance (MonadIO m, MonadMask m, MonadReader Layout m) => Term (DumbTerm m) where
-  reposition _ s = refitLine s
-  drawLineDiff x y = drawLineDiff' x y
-
   printLines = mapM_ (printText . (++ crlf))
   moveToNextLine _ = printText crlf
   clearLayout = clearLayoutD
   ringBell True = printText "\a"
   ringBell False = return ()
+  reposition _ = refitLine
+  drawLineDiff = drawLineDiff'
 
 printText :: (MonadIO m) => String -> DumbTerm m ()
 printText str = do
-  h <- liftM ehOut ask
+  h <- fmap ehOut ask
   liftIO $ hPutStr h str
   liftIO $ hFlush h
 

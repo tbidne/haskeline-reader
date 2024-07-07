@@ -34,10 +34,11 @@ debugTerminalKeys = runInputT defaultSettings $ do
     loop = KeyMap $ \k ->
       Just $
         Consumed $
-          ( const $ do
-              effect (LineChange $ const ([], []))
-              effect (PrintLines [show k])
-              setState emptyIM
-          )
+          const
+            ( do
+                effect (LineChange $ const ([], []))
+                effect (PrintLines [show k])
+                setState emptyIM
+            )
             >|> keyCommand loop
     prompt = stringToGraphemes "> "

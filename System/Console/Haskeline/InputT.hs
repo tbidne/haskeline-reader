@@ -186,7 +186,7 @@ data Behavior = Behavior (IO RunTerm)
 -- | Create and use a RunTerm, ensuring that it will be closed even if
 -- an async exception occurs during the creation or use.
 withBehavior :: (MonadIO m, MonadMask m) => Behavior -> (RunTerm -> m a) -> m a
-withBehavior (Behavior run) f = bracket (liftIO run) (liftIO . closeTerm) f
+withBehavior (Behavior run) = bracket (liftIO run) (liftIO . closeTerm)
 
 -- | Run a line-reading application according to the given behavior.
 --

@@ -47,7 +47,7 @@ runCommandLoop' ::
 runCommandLoop' liftE tops prefix initState cmds getEvent = do
   let s = lineChars prefix initState
   drawLine s
-  readMoreKeys s (fmap (liftM (\x -> (x, [])) . ($ initState)) cmds)
+  readMoreKeys s (fmap (fmap (,[]) . ($ initState)) cmds)
   where
     readMoreKeys :: LineChars -> KeyMap (CmdM m (a, [Key])) -> n a
     readMoreKeys s next = do
@@ -156,5 +156,5 @@ applyKeysToCmd ::
   CmdM m (a, [Key])
 applyKeysToCmd ks (GetKey next) = applyKeysToMap ks next
 applyKeysToCmd ks (DoEffect e next) = DoEffect e (applyKeysToCmd ks next)
-applyKeysToCmd ks (CmdM next) = CmdM $ liftM (applyKeysToCmd ks) next
+applyKeysToCmd ks (CmdM next) = CmdM $ fmap (applyKeysToCmd ks) next
 applyKeysToCmd ks (Result (x, ys)) = Result (x, ys ++ ks) -- use in the next input line

@@ -232,7 +232,7 @@ runActionT m = do
   (x, action) <- Writer.runWriterT m
   toutput <- asks action
   term <- ask
-  ttyh <- liftM ehOut ask
+  ttyh <- fmap ehOut ask
   liftIO $ hRunTermOutput ttyh term toutput
   return x
 
@@ -301,7 +301,7 @@ advancePos k Layout {width = w} rs p = indexToPos $ k + posIndex
               (lookupCells rs)
               [0 .. termRow p - 1]
           )
-    indexToPos n = loopFindRow 0 n
+    indexToPos = loopFindRow 0
     loopFindRow r m =
       r `seq`
         m `seq`

@@ -42,7 +42,7 @@ hGetInputEchoState input = do
   min_tty <- minTTY input
   if min_tty
     then fmap MinTTY (hGetInputEchoSTTY input)
-    else fmap DefaultTTY $ hGetEcho input
+    else DefaultTTY <$> hGetEcho input
 
 -- | Return all of @stty@'s current settings in a non-human-readable format.
 --

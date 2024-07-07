@@ -130,7 +130,7 @@ unicodeMovement i =
              ]
        ]
   where
-    longWideChar = T.concat $ replicate 30 $ "안기영"
+    longWideChar = T.concat $ replicate 30 "안기영"
     (lwc1, lwcs1) = T.splitAt ((80 - 2) `div` 2) longWideChar
     (lwc2, lwcs2) = T.splitAt (80 `div` 2) lwcs1
     (lwc3, _lwcs3) = T.splitAt (80 `div` 2) lwcs2
@@ -319,7 +319,7 @@ fileStyleTests i =
                  <> prompt' 3
                  <> whenLegacy (output 3 err <> prompt' 4)
              ]
-             ++ if legacyEncoding then [] else [output 3 err <> prompt' 4],
+             ++ ([output 3 err <> prompt' 4 | not legacyEncoding]),
          "invalid char file input (no preceding newline)"
            ~: utf8Test
              iFileChar
@@ -336,7 +336,7 @@ fileStyleTests i =
                  <> prompt' 3
                  <> whenLegacy (output 3 err <> prompt' 4)
              ]
-             ++ if legacyEncoding then [] else [output 3 err <> prompt' 4]
+             ++ ([output 3 err <> prompt' 4 | not legacyEncoding])
        ]
   where
     -- also single char and buffer break and other stuff
@@ -385,7 +385,7 @@ dumbTests i =
              ]
        ]
   where
-    wideChar = T.concat $ replicate 10 $ "안기영"
+    wideChar = T.concat $ replicate 10 "안기영"
 
 -------------
 -- Building blocks for expected input/output
@@ -437,7 +437,7 @@ utf8Test = testI . setUTF8
 utf8TestInvalidHist ::
   Invocation -> [BC.ByteString] -> [BC.ByteString] -> Test
 utf8TestInvalidHist i input output' = test $ do
-  B.writeFile "myhist" $ invalidHist
+  B.writeFile "myhist" invalidHist
   assertInvocation (setUTF8 i) input output'
 
 utf8TestValidHist ::
@@ -449,5 +449,5 @@ utf8TestValidHist i input output' = test $ do
 latin1TestInvalidHist ::
   Invocation -> [BC.ByteString] -> [BC.ByteString] -> Test
 latin1TestInvalidHist i input output' = test $ do
-  B.writeFile "myhist" $ invalidHist
+  B.writeFile "myhist" invalidHist
   assertInvocation (setLatin1 i) input output'

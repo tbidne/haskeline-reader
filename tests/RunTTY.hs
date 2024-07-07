@@ -75,7 +75,7 @@ runInvocation Invocation {..} inputs
       return $
         firstOutput
           : outputs
-          ++ if B.null lastOutput then [] else [lastOutput]
+          ++ ([lastOutput | not (B.null lastOutput)])
 
 inputOutput :: Handle -> Handle -> B.ByteString -> IO B.ByteString
 inputOutput inH outH input = do

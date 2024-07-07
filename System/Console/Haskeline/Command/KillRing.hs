@@ -39,7 +39,7 @@ pasteCommand ::
   ([Grapheme] -> s -> s) ->
   Command m (ArgMode s) s
 pasteCommand use = \s -> do
-  ms <- liftM peek get
+  ms <- fmap peek get
   case ms of
     Nothing -> return $ argState s
     Just p -> do

@@ -3,7 +3,6 @@
 #endif
 module System.Console.Haskeline.Vi where
 
-import Control.Monad (liftM)
 import Control.Monad.Catch (MonadMask)
 import Data.Char
 import System.Console.Haskeline.Command
@@ -214,7 +213,7 @@ repeatableCommands =
       simpleChar '.' +> saveForUndo >|> runLastCommand
     ]
   where
-    runLastCommand s = liftM lastCommand get >>= ($ s)
+    runLastCommand s = get >>= ($ s) . lastCommand
 
 repeatableCmdMode :: InputKeyCmd (ArgMode CommandMode) CommandMode
 repeatableCmdMode =
@@ -261,7 +260,7 @@ deletionToInsertCmd =
       -- readline does this too, so we should also.
       simpleChar 'w' +> killAndStoreIE (SimpleMove goToWordDelEnd),
       simpleChar 'W' +> killAndStoreIE (SimpleMove goToBigWordDelEnd),
-      useMovementsForKill (liftM Left . change argState) killAndStoreIE,
+      useMovementsForKill (fmap Left . change argState) killAndStoreIE,
       withoutConsuming (return . Left . argState)
     ]
 
@@ -363,7 +362,7 @@ wordErase = SimpleMove $ goLeftUntil $ atStart isBigWordChar
 findMatchingBrace :: InsertMode -> InsertMode
 findMatchingBrace (IMode xs (y : ys))
   | Just b <- matchingRightBrace yc,
-    Just ((b' : bs), ys') <- scanBraces yc b ys =
+    Just (b' : bs, ys') <- scanBraces yc b ys =
       IMode (bs ++ [y] ++ xs) (b' : ys')
   | Just b <- matchingLeftBrace yc,
     Just (bs, xs') <- scanBraces yc b xs =
@@ -435,13 +434,13 @@ storedCmdAction ::
   (Monad m) =>
   Command (ViT m) (ArgMode CommandMode) CommandMode ->
   Command (ViT m) (ArgMode CommandMode) CommandMode
-storedCmdAction act = storeLastCmd (liftM Left . act) >|> act
+storedCmdAction act = storeLastCmd (fmap Left . act) >|> act
 
 storedIAction ::
   (Monad m) =>
   Command (ViT m) (ArgMode CommandMode) InsertMode ->
   Command (ViT m) (ArgMode CommandMode) InsertMode
-storedIAction act = storeLastCmd (liftM Right . act) >|> act
+storedIAction act = storeLastCmd (fmap Right . act) >|> act
 
 killAndStoreCmd :: (MonadIO m) => KillHelper -> Command (ViT m) (ArgMode CommandMode) CommandMode
 killAndStoreCmd = storedCmdAction . killFromArgHelper

@@ -92,7 +92,7 @@ stifleHistory a@(Just n) hist =
         else Seq.fromList . take n . toList
 
 addHistory :: String -> History -> History
-addHistory s h = h {histLines = maybeDropLast (stifleAmt h) (s <| (histLines h))}
+addHistory s h = h {histLines = maybeDropLast (stifleAmt h) (s <| histLines h)}
 
 -- If the sequence is too big, drop the last entry.
 maybeDropLast :: Maybe Int -> Seq a -> Seq a

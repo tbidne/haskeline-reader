@@ -49,14 +49,14 @@ instance
   ask = lift ask
 
 asks :: (MonadReader r m) => (r -> a) -> m a
-asks f = liftM f ask
+asks f = fmap f ask
 
 class (Monad m) => MonadState s m where
   get :: m s
   put :: s -> m ()
 
 gets :: (MonadState s m) => (s -> a) -> m a
-gets f = liftM f get
+gets f = fmap f get
 
 modify :: (MonadState s m) => (s -> s) -> m ()
 modify f = get >>= put . f
@@ -90,7 +90,7 @@ instance (MonadIO m) => MonadState s (ReaderT (IORef s) m) where
   put s = ask >>= liftIO . flip writeIORef s
 
 evalStateT' :: (Monad m) => s -> StateT s m a -> m a
-evalStateT' s f = liftM fst $ runStateT f s
+evalStateT' s f = fst <$> runStateT f s
 
 orElse :: (Monad m) => MaybeT m a -> m a -> m a
 orElse (MaybeT f) g = f >>= maybe g return

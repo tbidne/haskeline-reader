@@ -183,7 +183,7 @@ getInputLineWithInitial prompt (left, right) =
     (runMaybeT . getLocaleLine)
     prompt
   where
-    initialIM = insertString left $ moveToStart $ insertString right $ emptyIM
+    initialIM = insertString left $ moveToStart $ insertString right emptyIM
 
 getInputCmdLine :: (MonadIO m, MonadMask m) => InsertMode -> TermOps -> Prefix -> InputT m (Maybe String)
 getInputCmdLine initialIM tops prefix = do

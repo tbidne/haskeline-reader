@@ -30,7 +30,7 @@ module System.Console.Haskeline.Command
 where
 
 import Control.Applicative (Applicative (..))
-import Control.Monad (ap, liftM, mplus)
+import Control.Monad (ap, liftM, mplus, (>=>))
 import Control.Monad.Trans.Class
 import Data.Char (isPrint)
 import System.Console.Haskeline.Key
@@ -76,15 +76,14 @@ instance (Monad m) => Monad (CmdM m) where
 
   GetKey km >>= g = GetKey $ fmap (>>= g) km
   DoEffect e f >>= g = DoEffect e (f >>= g)
-  CmdM f >>= g = CmdM $ liftM (>>= g) f
+  CmdM f >>= g = CmdM $ fmap (>>= g) f
   Result x >>= g = g x
 
 type KeyCommand m s t = KeyMap (Command m s t)
 
 instance MonadTrans CmdM where
   lift m = CmdM $ do
-    x <- m
-    return $ Result x
+    Result <$> m
 
 keyCommand :: KeyCommand m s t -> Command m s t
 keyCommand km = \s -> GetKey $ fmap ($ s) km
@@ -94,7 +93,7 @@ useKey k x = KeyMap $ \k' -> if k == k' then Just (Consumed x) else Nothing
 
 -- TODO: could just be a monadic action that returns a Char.
 useChar :: (Char -> Command m s t) -> KeyCommand m s t
-useChar act = KeyMap $ \k -> case k of
+useChar act = KeyMap $ \case
   Key m (KeyChar c)
     | isPrint c && m == noModifier ->
         Just $ Consumed (act c)
@@ -118,7 +117,7 @@ keyChoiceCmdM = GetKey . choiceCmd
 infixr 6 >|>
 
 (>|>) :: (Monad m) => Command m s t -> Command m t u -> Command m s u
-f >|> g = \x -> f x >>= g
+f >|> g = f >=> g
 
 infixr 6 >+>
 
