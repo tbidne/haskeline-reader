@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "./"
+      component: "lib:haskeline"
+
+    - path: "tests"
+      component: "haskeline:test:haskeline-tests"
+
+    - path: "examples/Test.hs"
+      component: "haskeline:exe:haskeline-examples-Test"
