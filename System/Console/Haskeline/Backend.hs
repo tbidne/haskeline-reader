@@ -1,9 +1,9 @@
 module System.Console.Haskeline.Backend where
 
-import System.Console.Haskeline.Term
-import System.Console.Haskeline.Monads
 import Control.Monad
-import System.IO (stdin, hGetEcho, Handle)
+import System.Console.Haskeline.Monads
+import System.Console.Haskeline.Term
+import System.IO (Handle, hGetEcho, stdin)
 
 #ifdef MINGW
 import System.Console.Haskeline.Backend.Win32 as Win32
@@ -15,10 +15,10 @@ import System.Console.Haskeline.Backend.Terminfo as Terminfo
 import System.Console.Haskeline.Backend.DumbTerm as DumbTerm
 #endif
 
-
 defaultRunTerm :: IO RunTerm
-defaultRunTerm = (liftIO (hGetEcho stdin) >>= guard >> stdinTTY)
-                    `orElse` fileHandleRunTerm stdin
+defaultRunTerm =
+  (liftIO (hGetEcho stdin) >>= guard >> stdinTTY)
+    `orElse` fileHandleRunTerm stdin
 
 terminalRunTerm :: IO RunTerm
 terminalRunTerm = directTTY `orElse` fileHandleRunTerm stdin
@@ -36,7 +36,6 @@ directTTY = win32Term
 #else
 directTTY = ttyHandles >>= runDraw
 #endif
-
 
 #ifndef MINGW
 runDraw :: Handles -> MaybeT IO RunTerm

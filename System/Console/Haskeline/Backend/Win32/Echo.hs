@@ -5,12 +5,17 @@ module System.Console.Haskeline.Backend.Win32.Echo (hWithoutInputEcho) where
 import Control.Exception (throw)
 import Control.Monad (void)
 import Control.Monad.Catch (MonadMask, bracket)
-import Control.Monad.IO.Class (MonadIO(..))
-
-import System.Exit (ExitCode(..))
+import Control.Monad.IO.Class (MonadIO (..))
+import System.Exit (ExitCode (..))
 import System.IO (Handle, hGetContents, hGetEcho, hSetEcho)
-import System.Process (StdStream(..), createProcess, shell,
-                       std_in, std_out, waitForProcess)
+import System.Process
+  ( StdStream (..),
+    createProcess,
+    shell,
+    std_in,
+    std_out,
+    waitForProcess,
+  )
 
 #if MIN_VERSION_Win32(2,5,0)
 import Control.Concurrent.MVar (readMVar)
@@ -36,8 +41,8 @@ hGetInputEchoState :: Handle -> IO EchoState
 hGetInputEchoState input = do
   min_tty <- minTTY input
   if min_tty
-     then fmap MinTTY (hGetInputEchoSTTY input)
-     else fmap DefaultTTY $ hGetEcho input
+    then fmap MinTTY (hGetInputEchoSTTY input)
+    else fmap DefaultTTY $ hGetEcho input
 
 -- | Return all of @stty@'s current settings in a non-human-readable format.
 --
@@ -73,9 +78,10 @@ hSetInputEchoSTTY input = void . hSttyRaw input
 -- @
 hBracketInputEcho :: (MonadIO m, MonadMask m) => Handle -> m a -> m a
 hBracketInputEcho input action =
-  bracket (liftIO $ hGetInputEchoState input)
-          (liftIO . hSetInputEchoState input)
-          (const action)
+  bracket
+    (liftIO $ hGetInputEchoState input)
+    (liftIO . hSetInputEchoState input)
+    (const action)
 
 -- | Perform a computation with the handle's input echoing disabled. Before
 -- running the computation, the handle's input 'EchoState' is saved, and the
@@ -83,27 +89,28 @@ hBracketInputEcho input action =
 hWithoutInputEcho :: (MonadIO m, MonadMask m) => Handle -> m a -> m a
 hWithoutInputEcho input action = do
   echo_off <- liftIO $ hEchoOff input
-  hBracketInputEcho input
-                    (liftIO (hSetInputEchoState input echo_off) >> action)
+  hBracketInputEcho
+    input
+    (liftIO (hSetInputEchoState input echo_off) >> action)
 
 -- | Create an @stty@ process, wait for it to complete, and return its output.
 hSttyRaw :: Handle -> String -> IO STTYSettings
 hSttyRaw input arg = do
-  let stty = (shell $ "stty " ++ arg) {
-        std_in  = UseHandle input
-      , std_out = CreatePipe
-      }
+  let stty =
+        (shell $ "stty " ++ arg)
+          { std_in = UseHandle input,
+            std_out = CreatePipe
+          }
   (_, mbStdout, _, rStty) <- createProcess stty
   exStty <- waitForProcess rStty
   case exStty of
-    e@ExitFailure{} -> throw e
-    ExitSuccess     -> maybe (return "") hGetContents mbStdout
+    e@ExitFailure {} -> throw e
+    ExitSuccess -> maybe (return "") hGetContents mbStdout
 
 -- | A representation of the handle input's current echoing state.
 -- See, for instance, 'hEchoOff'.
 data EchoState
-  = MinTTY STTYSettings
-    -- ^ The argument to (or value returned from) an invocation of the @stty@
+  = -- | The argument to (or value returned from) an invocation of the @stty@
     -- command-line utility. Most POSIX-like shells have @stty@, including
     -- MinTTY on Windows. Since neither 'hGetEcho' nor 'hSetEcho' work on
     -- MinTTY, when 'getInputEchoState' runs on MinTTY, it returns a value
@@ -112,21 +119,23 @@ data EchoState
     -- However, native Windows consoles like @cmd.exe@ or PowerShell do not
     -- have @stty@, so if you construct an 'EchoState' with this constructor
     -- manually, take care not to use it with a native Windows console.
-  | DefaultTTY Bool
-    -- ^ A simple on ('True') or off ('False') toggle. This is returned by
+    MinTTY STTYSettings
+  | -- | A simple on ('True') or off ('False') toggle. This is returned by
     -- 'hGetEcho' and given as an argument to 'hSetEcho', which work on most
     -- consoles, with the notable exception of MinTTY on Windows. If you
     -- construct an 'EchoState' with this constructor manually, take care not
     -- to use it with MinTTY.
+    DefaultTTY Bool
   deriving (Eq, Ord, Show)
 
 -- | Indicates that the handle's input echoing is (or should be) off.
 hEchoOff :: Handle -> IO EchoState
 hEchoOff input = do
   min_tty <- minTTY input
-  return $ if min_tty
-              then MinTTY "-echo"
-              else DefaultTTY False
+  return $
+    if min_tty
+      then MinTTY "-echo"
+      else DefaultTTY False
 
 -- | Settings used to configure the @stty@ command-line utility.
 type STTYSettings = String

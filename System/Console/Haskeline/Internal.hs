@@ -1,5 +1,4 @@
-module System.Console.Haskeline.Internal
-    ( debugTerminalKeys ) where
+module System.Console.Haskeline.Internal (debugTerminalKeys) where
 
 import System.Console.Haskeline (defaultSettings, outputStrLn)
 import System.Console.Haskeline.Command
@@ -17,21 +16,28 @@ import System.Console.Haskeline.Term
 --
 -- Haskeline's behavior may be modified by editing your @~/.haskeline@
 -- file.  For details, see: <https://github.com/judah/haskeline/wiki/CustomKeyBindings>
---
 debugTerminalKeys :: IO a
 debugTerminalKeys = runInputT defaultSettings $ do
-    outputStrLn
-        "Press any keys to debug Haskeline's input, or ctrl-c to exit:"
-    rterm <- InputT ask
-    case termOps rterm of
-        Right _ -> error "debugTerminalKeys: not run in terminal mode"
-        Left tops -> runInputCmdT tops $ runCommandLoop tops prompt
-                                            loop emptyIM
+  outputStrLn
+    "Press any keys to debug Haskeline's input, or ctrl-c to exit:"
+  rterm <- InputT ask
+  case termOps rterm of
+    Right _ -> error "debugTerminalKeys: not run in terminal mode"
+    Left tops ->
+      runInputCmdT tops $
+        runCommandLoop
+          tops
+          prompt
+          loop
+          emptyIM
   where
-    loop = KeyMap $ \k -> Just $ Consumed $
-            (const $ do
-                effect (LineChange $ const ([],[]))
-                effect (PrintLines [show k])
-                setState emptyIM)
+    loop = KeyMap $ \k ->
+      Just $
+        Consumed $
+          ( const $ do
+              effect (LineChange $ const ([], []))
+              effect (PrintLines [show k])
+              setState emptyIM
+          )
             >|> keyCommand loop
     prompt = stringToGraphemes "> "
